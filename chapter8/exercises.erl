@@ -27,7 +27,15 @@ get_module_functions(ModuleName) ->
 get_most_common_function_name_in_modules() ->
   Functions = lists:flatmap(fun({ModuleName, _}) -> get_module_functions(ModuleName) end, code:all_loaded()),
   FunctionsNames = lists:map(fun({Name, _}) -> Name end, Functions),
-  %lists:foldl(fun(X, Acc) -> dict:update(X, fun(Old) -> Old + 1 end, 1, Acc) end, dict:new(), FunctionsNames),
   FunctionsOccurrences = lists:foldl(fun(X, Acc) -> dict:update_counter(X, 1, Acc) end, dict:new(), FunctionsNames),
-  [H | _] = dict:fold(fun(Key, Value, AccIn) -> [{_, CurrentMax} | _] = AccIn, case CurrentMax < Value of true ->[{Key, Value} | AccIn]; false -> AccIn end end, [{"", 0}], FunctionsOccurrences),
-  H.
+  max_value(FunctionsOccurrences, {"", 0}).
+
+max_value(Dictionary, FirstValue) ->
+  [Result | _] = dict:fold(fun(Key, Value, AccIn) ->
+                              [{_, CurrentMax} | _] = AccIn,
+                              case CurrentMax < Value of
+                                true ->[{Key, Value} | AccIn];
+                                false -> AccIn
+                              end
+                            end, [FirstValue], Dictionary),
+  Result.
