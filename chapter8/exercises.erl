@@ -8,7 +8,7 @@
 %%%-------------------------------------------------------------------
 -module(exercises).
 -author("paolo").
--export([get_module_with_most_functions/0, get_most_common_function_name_in_modules/0]).
+-export([get_module_with_most_functions/0, get_most_common_function_name_in_modules/0, get_unambiguous_functions/0]).
 
 
 get_module_with_most_functions() ->
@@ -25,10 +25,7 @@ get_module_functions(ModuleName) ->
   Functions.
 
 get_most_common_function_name_in_modules() ->
-  Functions = lists:flatmap(fun({ModuleName, _}) -> get_module_functions(ModuleName) end, code:all_loaded()),
-  FunctionsNames = lists:map(fun({Name, _}) -> Name end, Functions),
-  FunctionsOccurrences = lists:foldl(fun(X, Acc) -> dict:update_counter(X, 1, Acc) end, dict:new(), FunctionsNames),
-  max_value(FunctionsOccurrences, {"", 0}).
+  max_value(get_functions_occurrences(), {"", 0}).
 
 max_value(Dictionary, FirstValue) ->
   [Result | _] = dict:fold(fun(Key, Value, AccIn) ->
@@ -37,5 +34,15 @@ max_value(Dictionary, FirstValue) ->
                                 true ->[{Key, Value} | AccIn];
                                 false -> AccIn
                               end
-                            end, [FirstValue], Dictionary),
+                           end, [FirstValue], Dictionary),
   Result.
+
+get_functions_occurrences() ->
+  Functions = lists:flatmap(fun({ModuleName, _}) -> get_module_functions(ModuleName) end, code:all_loaded()),
+  FunctionsNames = lists:map(fun({Name, _}) -> Name end, Functions),
+  lists:foldl(fun(X, Acc) -> dict:update_counter(X, 1, Acc) end, dict:new(), FunctionsNames).
+
+get_unambiguous_functions() ->
+  UnambiguosFunctions = dict:filter(fun(_, Occurrence) -> Occurrence =:= 1 end, get_functions_occurrences()),
+  lists:map(fun({FunctionName, _}) -> FunctionName end, dict:to_list(UnambiguosFunctions)).
+
