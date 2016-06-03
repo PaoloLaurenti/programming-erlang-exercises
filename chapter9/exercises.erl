@@ -12,11 +12,10 @@ fac(N) -> N*fac(N-1).
 %%-spec area(shape()) -> integer().
 
 %% SPECIFICATION 2
-%%-spec area(Shape) -> pos_integer() when
-%%  Shape :: {ShapeName,  pos_integer()} | {ShapeName,  pos_integer(),  pos_integer()},
-%%  ShapeName :: rectangle | square | circle | right_angled_triangle.
+-spec area(Shape) -> pos_integer() when
+  Shape :: {ShapeName,  pos_integer()} | {ShapeName,  pos_integer(),  pos_integer()},
+  ShapeName :: rectangle | square | circle | right_angled_triangle.
 
-%area({rectangle, Width, Height, UUU}) -> Width * Height * UUU;
 area({rectangle, Width, Height}) -> Width * Height;
 area({square, Side}) -> Side * Side;
 area({circle, Radius}) -> math:pi() * Radius * Radius;
