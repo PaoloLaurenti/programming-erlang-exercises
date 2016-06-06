@@ -8,7 +8,7 @@
 %%%-------------------------------------------------------------------
 -module(exercises).
 -author("paolo").
--export([my_spawn/3, do_nothing/1, my_spawn2/3]).
+-export([my_spawn/3, do_nothing/1, my_spawn2/3, my_spawn/4]).
 
 my_spawn(Mod, Fun, Args) ->
   spawn(fun() ->
@@ -19,6 +19,22 @@ my_spawn(Mod, Fun, Args) ->
               End = erlang:monotonic_time(),
               io:format("Process ~p died due to: ~p~n", [Pid, Why]),
               io:format("Duration: ~p~n", [erlang:convert_time_unit(End - Start, native, seconds)])
+          end
+        end).
+
+my_spawn(Mod, Fun, Args, Time) ->
+  spawn(fun() ->
+          {Pid, Ref} = spawn_monitor(Mod, Fun, Args),
+          io:format("Inner PID ~p~n", [Pid]),
+          Start = erlang:monotonic_time(),
+          receive
+            {'DOWN', Ref, process, Pid, Why} ->
+              End = erlang:monotonic_time(),
+              io:format("Process ~p died due to: ~p~n", [Pid, Why]),
+              io:format("Duration: ~p~n", [erlang:convert_time_unit(End - Start, native, seconds)])
+          after Time ->
+            io:format("Process timeout~n",[]),
+            exit(Pid, timeout)
           end
         end).
 
