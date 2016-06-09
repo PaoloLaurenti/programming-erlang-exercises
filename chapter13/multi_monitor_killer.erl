@@ -33,15 +33,16 @@ monitor_all(Processes) ->
     {'DOWN', Ref, process, Pid, _Why} ->
       io:format("Process {~p, ~p} terminated. Kill and restart all processes~n", [Pid, Ref]),
       OtherProcesses = lists:filter(fun({P, R}) -> P =/= Pid andalso R =/= Ref end, Processes),
-      lists:foreach(fun({P, R}) ->
-                      demonitor(R),
-                      exit(P, stop)
-                    end, OtherProcesses),
-      monitor_all(spawn_processes(length(Processes)));
+      lists:foreach(fun exit_monitored_process/1, OtherProcesses),
+      spawn_monitored_processes(length(Processes));
     shutdown ->
       lists:foreach(fun({P, R}) -> demonitor(R) andalso exit(P, shutdown) end, Processes),
       io:format("All processes terminated~n", [])
   end.
+
+exit_monitored_process({Process, Ref}) ->
+  demonitor(Ref),
+  exit(Process, stop).
 
 spawn_monitored_process(Timeout) ->
   spawn_monitor(multi_monitor_killer, do_something, [Timeout]).
