@@ -16,17 +16,17 @@ files(Dir, Re, Flag) ->
   reverse(files(Dir, Re, Flag, fun(File, Acc) ->[File|Acc] end, [])).
 
 files(Dir, Reg, Recursive, Fun, Acc) ->
-  Re1 = xmerl_regexp:sh_to_awk(Reg),
   case file:list_dir(Dir) of
-    {ok, Files} -> find_files(Files, Dir, Re1, Recursive, Fun, Acc);
+    {ok, Files} -> find_files(Files, Dir, Reg, Recursive, Fun, Acc);
     {error, _}  -> Acc
   end.
 
 find_files([File|T], Dir, Reg, Recursive, Fun, Acc0) ->
+  Re1 = xmerl_regexp:sh_to_awk(Reg),
   FullName = filename:join([Dir,File]),
   case file_type(FullName) of
     regular ->
-      case re:run(FullName, Reg, [{capture,none}]) of
+      case re:run(FullName, Re1, [{capture,none}]) of
         match  ->
           Acc = Fun(FullName, Acc0),
           find_files(T, Dir, Reg, Recursive, Fun, Acc);

@@ -26,7 +26,7 @@ calc_chunk(File, Context, Location) ->
   case file:pread(File, Location, 100) of
     {ok, Chunk} ->
       erlang:md5_update(Context, Chunk),
-      calc_chunk(File, Context, Location + 1000);
+      calc_chunk(File, Context, Location + 100);
     eof ->
       ok
   end.
