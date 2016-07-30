@@ -3,9 +3,9 @@
 
 -behaviour(gen_server).
 
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3, start_link/0, add_job/1, work_wanted/0, job_done/1, stop/0]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3, start_link/0, add_job/1, work_wanted/0, job_done/1, stop/0, statistics/0]).
 
--compile(export_all).
+%%-compile(export_all).
 
 -define(SERVER, ?MODULE).
 
@@ -35,8 +35,8 @@ init([]) ->
 
 handle_call({add, F}, _From, {Index, ToDoJobs, InProgressJobs, DoneJobs}) ->
   JobNumber = Index + 1,
-  Update_queue = queue:in({JobNumber, F}, ToDoJobs),
-  {reply, JobNumber, {JobNumber, Update_queue, InProgressJobs, DoneJobs}};
+  NewToDoJobs = queue:in({number, JobNumber, {job, F}}, ToDoJobs),
+  {reply, JobNumber, {JobNumber, NewToDoJobs, InProgressJobs, DoneJobs}};
 
 handle_call(work_wanted, _From, {Index, ToDoJobs, InProgressJobs, DoneJobs}) ->
   case queue:out(ToDoJobs) of
@@ -47,14 +47,13 @@ handle_call(work_wanted, _From, {Index, ToDoJobs, InProgressJobs, DoneJobs}) ->
   end;
 
 handle_call(statistics, _From, {Index, ToDoJobs, InProgressJobs, DoneJobs}) ->
-  {reply, {{toDo, ToDoJobs}, {in_progress, InProgressJobs}, {done, DoneJobs}}, {Index, ToDoJobs, InProgressJobs, DoneJobs}}.
+  {reply, {{to_do, ToDoJobs}, {in_progress, InProgressJobs}, {done, DoneJobs}}, {Index, ToDoJobs, InProgressJobs, DoneJobs}}.
 
 handle_cast({done, JobNumber}, {Index, ToDoJobs, InProgressJobs, DoneJobs}) ->
-  case lists:partition(fun({JN, _}) -> JN =:= JobNumber end, InProgressJobs) of
+  case lists:partition(fun({number, JN, _}) -> JN =:= JobNumber end, InProgressJobs) of
     {[], _} ->
       {noreply, {Index, ToDoJobs, InProgressJobs, DoneJobs}};
-    _Else ->
-      {[H | _], NewInProgressJobs} = lists:partition(fun({JN, _}) -> JN =:= JobNumber end, InProgressJobs),
+    {[H | _], NewInProgressJobs} ->
       {noreply, {Index, ToDoJobs, NewInProgressJobs, [H | DoneJobs]}}
   end.
 
