@@ -24,6 +24,9 @@ work_wanted() ->
 job_done(JobNumber) ->
   gen_server:cast(?MODULE, {done, JobNumber}).
 
+statistics() ->
+  gen_server:call(?MODULE, statistics).
+
 stop() ->
   gen_server:stop(?MODULE).
 
@@ -41,7 +44,10 @@ handle_call(work_wanted, _From, {Index, ToDoJobs, InProgressJobs, DoneJobs}) ->
       {reply, Job, {Index, NewToDoJobs, [Job | InProgressJobs], DoneJobs}};
     {empty, ToDoJobs} ->
       {reply, no, {Index, ToDoJobs, InProgressJobs, DoneJobs}}
-  end.
+  end;
+
+handle_call(statistics, _From, {Index, ToDoJobs, InProgressJobs, DoneJobs}) ->
+  {reply, {{toDo, ToDoJobs}, {in_progress, InProgressJobs}, {done, DoneJobs}}, {Index, ToDoJobs, InProgressJobs, DoneJobs}}.
 
 handle_cast({done, JobNumber}, {Index, ToDoJobs, InProgressJobs, DoneJobs}) ->
   case lists:partition(fun({JN, _}) -> JN =:= JobNumber end, InProgressJobs) of
