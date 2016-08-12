@@ -27,7 +27,6 @@ init([]) ->
   %% Note we must set trap_exit = true if we
   %% want terminate/2 to be called when the application
   %% is stopped
-
   process_flag(trap_exit, true),
   io:format("~p starting~n",[?MODULE]),
   {ok, 0}.
